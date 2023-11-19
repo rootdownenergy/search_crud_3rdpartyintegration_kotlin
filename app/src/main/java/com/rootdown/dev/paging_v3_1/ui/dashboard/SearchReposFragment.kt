@@ -2,70 +2,56 @@ package com.rootdown.dev.paging_v3_1.ui.dashboard
 
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadState
-import com.rootdown.dev.paging_v3_1.Injection
 import com.rootdown.dev.paging_v3_1.R
+import com.rootdown.dev.paging_v3_1.data.Repo
+import com.rootdown.dev.paging_v3_1.databinding.FragmentSearchReposBinding
+import com.rootdown.dev.paging_v3_1.ui.MainActivity
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
-import com.rootdown.dev.paging_v3_1.databinding.FragmentSearchReposBinding
-import com.rootdown.dev.paging_v3_1.data.Repo
-import com.rootdown.dev.paging_v3_1.ui.MainActivity
 
-
+@AndroidEntryPoint
 class SearchReposFragment: Fragment() {
 
     private lateinit var binding: FragmentSearchReposBinding
     private lateinit var state: String
 
-    private val viewModel: SearchRepositoriesViewModel by lazy {
-        val activity = requireNotNull(this.activity){
-            "You can only access the viewModel after onActivityCreated()"
-        }
-        ViewModelProvider(this, Injection.provideViewModelFactory(activity.application))
-            .get(SearchRepositoriesViewModel::class.java)
-    }
+    private val viewModel: SearchRepositoriesViewModel by viewModels()
 
-    var profile_ls: List<Repo> = emptyList()
+    private var profileLs: List<Repo> = emptyList()
     private val adapter = ReposAdapter{position -> onListItemClick(position)}
     private var searchJob: Job? = null
 
-    override fun onResume() {
-        super.onResume()
-
-        // Set title bar
-        (activity as MainActivity)
-            .setActionBarTitle("")
-    }
 
     private fun onListItemClick(position: Int) {
-        val current_repo: Repo = profile_ls[position]
-        val lat: Float = current_repo.lat.toFloat()
-        val lng: Float = current_repo.lng.toFloat()
-        val title: String = current_repo.company_name
+        val currentRepo: Repo = profileLs[position]
+        val lat: Float = currentRepo.lat.toFloat()
+        val lng: Float = currentRepo.lng.toFloat()
+        val title: String = currentRepo.company_name
         val action = SearchReposFragmentDirections.actionFragmentDashboardToFragmentMaps(lat,lng,title)
         this.findNavController().navigate(action)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val query = savedInstanceState?.getString(LAST_SEARCH_QUERY) ?: DEFAULT_QUERY
-        state = query.toString()
+        state = query
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        (activity as MainActivity).supportActionBar?.title = ""
     }
 
     override fun onCreateView(
@@ -77,24 +63,21 @@ class SearchReposFragment: Fragment() {
         return binding.root
     }
 
-    @ExperimentalPagingApi
+
+    @OptIn(ExperimentalPagingApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initAdapter()
-        val query = savedInstanceState?.getString(LAST_SEARCH_QUERY) ?: DEFAULT_QUERY
-        //search(state)
         initSearch()
         binding.retryButton.setOnClickListener { adapter.retry() }
         viewModel.x_profiles.observe(viewLifecycleOwner){
-            profile_ls = it
+            profileLs = it
         }
     }
 
-    @ExperimentalPagingApi
+    @OptIn(ExperimentalPagingApi::class)
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.options_menu_profile, menu)
-        //search(state)
-        //initSearch(state)
         val search: MenuItem? = menu.findItem(R.id.profile_search)
         val searchView: SearchView = search?.actionView as SearchView
         searchView.queryHint = "Abbr. State, City, Dispensary Name"
@@ -104,7 +87,7 @@ class SearchReposFragment: Fragment() {
             }
             override fun onQueryTextSubmit(query: String?): Boolean {
                 state = query.toString()
-                updateRepoListFromInput()
+                updateRepoLsIn()
                 return true
             }
         })
@@ -114,7 +97,6 @@ class SearchReposFragment: Fragment() {
 
     @ExperimentalPagingApi
     private fun search(query: String) {
-        // Make sure we cancel the previous job before creating a new one
         searchJob?.cancel()
         searchJob = lifecycleScope.launch {
             viewModel.searchRepo(query).collectLatest {
@@ -134,14 +116,9 @@ class SearchReposFragment: Fragment() {
             footer = ReposLoadStateAdapter { adapter.retry() }
         )
         adapter.addLoadStateListener { loadState ->
-            // Only show the list if refresh succeeds.
             binding.list.isVisible = loadState.source.refresh is LoadState.NotLoading
-            // Show loading spinner during initial load or refresh.
             binding.progressBar.isVisible = loadState.source.refresh is LoadState.Loading
-            // Show the retry state if initial load or refresh fails.
             binding.retryButton.isVisible = loadState.source.refresh is LoadState.Error
-
-            // Toast on any error, regardless of whether it came from RemoteMediator or PagingSource
             val errorState = loadState.source.append as? LoadState.Error
                 ?: loadState.source.prepend as? LoadState.Error
                 ?: loadState.append as? LoadState.Error
@@ -149,7 +126,7 @@ class SearchReposFragment: Fragment() {
             errorState?.let {
                 Toast.makeText(
                     this.activity,
-                    "\uD83D\uDE28 Wooops ${it.error}",
+                    "${it.error}",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -158,24 +135,24 @@ class SearchReposFragment: Fragment() {
 
     @ExperimentalPagingApi
     private fun initSearch() {
-
-        updateRepoListFromInput()
-
-        // Scroll to top when the list is refreshed from network.
+        updateRepoLsIn()
         lifecycleScope.launch {
             adapter.loadStateFlow
-                // Only emit when REFRESH LoadState for RemoteMediator changes.
                 .distinctUntilChangedBy { it.refresh }
-                // Only react to cases where Remote REFRESH completes i.e., NotLoading.
                 .filter { it.refresh is LoadState.NotLoading }
                 .collect { binding.list.scrollToPosition(0) }
         }
     }
 
     @ExperimentalPagingApi
-    private fun updateRepoListFromInput() {
+    private fun updateRepoLsIn() {
         val x: String = state
-        search(x.toString())
+        search(x)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        searchJob?.cancel()
     }
 
     companion object {

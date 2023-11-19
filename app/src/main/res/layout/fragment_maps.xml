@@ -7,17 +7,19 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context=".ui.map.MapsFragment">
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabMapProfiles"
+        android:id="@+id/fab_map_profiles"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="112dp"
-        app:srcCompat="@drawable/ic_baseline_storefront_24"/>
+        app:srcCompat="@drawable/ic_baseline_storefront_24"
+        android:contentDescription="TODO" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -2,6 +2,7 @@ package com.rootdown.dev.paging_v3_1.ui.home
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +13,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionInflater
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.android.material.snackbar.Snackbar
 import com.rootdown.dev.paging_v3_1.R
 import com.rootdown.dev.paging_v3_1.data.DatabaseStrain
@@ -53,33 +55,34 @@ class StrainsDetailsFragment: Fragment() {
         _binding = FragmentStrainsDetailsBinding.inflate(inflater, container, false)
         val view = binding.root
         val fab: View = binding.saveStrain
-
+        var xx = ""
         val img: ImageView = _binding!!.strainDetailImgId
         viewModel.strainDetailed.observe(viewLifecycleOwner, Observer {
             val strainId = it.id
             userStrainId = strainId
-            userStrainName = it.strain_name
-            val currStrain = DatabaseStrain(it.id, it.strainOwnerId, it.strain_name,
+            userStrainName = it.strain_name.removeSuffix(".webp")
+            xx = it.strain_name.trimEnd().removeSuffix("webp")
+            val currStrain = DatabaseStrain(it.id, it.strainOwnerId, xx,
                 it.strain_description, it.thc, it.cbd, it.cbn, it.strain_tag_words, it.strain_image,
                 it.strain_type, it.updated_at, it.created_at)
             strain = currStrain
             val it_strain_img = it.strain_image
-            val uri = "https://cdn.karmanomic.com/$it_strain_img"
+            val uri = "https://d3b3tm7jjqus71.cloudfront.net/$it_strain_img"
+            Log.w("STR$", uri)
             if(it_strain_img != null){
                 Glide.with(this)
                     .load(uri)
-                    .override(100, 600)
-                    .fitCenter()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(img)
             }
-            _binding!!.strainDetailNameId.text = it.strain_name
+            _binding!!.strainDetailNameId.text = it.strain_name.removeSuffix(".webp")
         })
         fab.setOnClickListener { view ->
             val currStrain = strain
 
             val id: Int = currStrain.id
             val strainOwnerId: Int? = currStrain.strainOwnerId
-            val strain_name: String = currStrain.strain_name
+            val strain_name: String = currStrain.strain_name.removeSuffix(".webp")
             val strain_description: String? = currStrain.strain_description
             val thc: String? = currStrain.thc
             val cbd: String? = currStrain.cbd

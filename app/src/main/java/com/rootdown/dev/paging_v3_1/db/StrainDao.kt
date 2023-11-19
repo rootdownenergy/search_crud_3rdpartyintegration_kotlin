@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.rootdown.dev.paging_v3_1.data.DatabaseStrain
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StrainDao {
@@ -23,5 +24,8 @@ interface StrainDao {
 
     @Query("SELECT * FROM databasestrain WHERE strain_name LIKE :queryString")
     fun strainById(queryString: String?): LiveData<DatabaseStrain>
+
+    @Query("SELECT * FROM databasestrain WHERE strain_type LIKE :query")
+    fun strainByType(query: String): Flow<List<DatabaseStrain>>
 }
 

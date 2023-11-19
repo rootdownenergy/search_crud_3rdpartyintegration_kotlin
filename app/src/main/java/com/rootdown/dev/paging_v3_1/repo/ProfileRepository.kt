@@ -3,8 +3,9 @@ package com.rootdown.dev.paging_v3_1.repo
 import androidx.lifecycle.LiveData
 import com.rootdown.dev.paging_v3_1.db.RepoDatabase
 import com.rootdown.dev.paging_v3_1.data.Repo
+import javax.inject.Inject
 
-class ProfileRepository(
+class ProfileRepository @Inject constructor(
     private val database: RepoDatabase,
 ){
 

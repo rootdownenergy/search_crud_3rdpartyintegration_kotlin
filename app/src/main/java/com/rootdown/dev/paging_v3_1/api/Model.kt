@@ -2,6 +2,13 @@ package com.rootdown.dev.paging_v3_1.api
 
 import androidx.room.PrimaryKey
 
+
+data class UserContentImage(
+    val name: String,
+    val description: String,
+    val cover_image: String
+)
+
 data class Strain(
     val strain_name: String?,
     val strain_description: String?,

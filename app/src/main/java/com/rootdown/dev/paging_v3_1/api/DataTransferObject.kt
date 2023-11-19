@@ -1,20 +1,23 @@
 package com.rootdown.dev.paging_v3_1.api
 
+import androidx.annotation.Keep
 import com.rootdown.dev.paging_v3_1.data.DatabaseLatLng
 import com.rootdown.dev.paging_v3_1.data.DatabaseStrain
 import com.squareup.moshi.JsonClass
 
-
+@Keep
 @JsonClass(generateAdapter = true)
 data class NetworkStrainContainer(val data: List<NetworkStrain>)
 
+@Keep
 @JsonClass(generateAdapter = true)
 data class NetworkProfilesContainer(val data: List<NetworkProfiles>)
 
+@Keep
 @JsonClass(generateAdapter = true)
 data class NetworkLatLngContainer(val data: List<NetworkLatLng>)
 
-
+@Keep
 @JsonClass(generateAdapter = true)
 data class NetworkLatLng(
     val id: Int,
@@ -32,21 +35,24 @@ fun NetworkLatLngContainer.asDatabaseModel(): List<DatabaseLatLng> {
     }
 }
 
+@Keep
 @JsonClass(generateAdapter = true)
 data class NetworkStrain(
-                        val id: Int,
-                        val strainOwnerId: Int?,
-                        val strain_name: String,
-                        val strain_description: String?,
-                        val thc: String?,
-                        val cbd: String?,
-                        val cbn: String?,
-                        val strain_tag_words: String?,
-                        val strain_image: String?,
-                        val strain_type: String?,
-                        val updated_at: String?,
-                        val created_at: String?)
+    val id: Int,
+    val strainOwnerId: Int?,
+    val strain_name: String,
+    val strain_description: String?,
+    val thc: String?,
+    val cbd: String?,
+    val cbn: String?,
+    val strain_tag_words: String?,
+    val strain_image: String?,
+    val strain_type: String?,
+    val updated_at: String?,
+    val created_at: String
+    )
 
+@Keep
 @JsonClass(generateAdapter = true)
 data class NetworkProfiles(
     val id: Long,

@@ -13,9 +13,11 @@ import com.google.android.material.snackbar.Snackbar
 import com.rootdown.dev.paging_v3_1.data.UserRepo
 import com.rootdown.dev.paging_v3_1.databinding.FragmentUserEditProfileBinding
 import com.rootdown.dev.paging_v3_1.ui.MainActivity
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
 
+@AndroidEntryPoint
 class FragmentUserEditProfile: Fragment() {
     private var _binding: FragmentUserEditProfileBinding? = null
     private val binding get() = _binding!!
@@ -48,12 +50,14 @@ class FragmentUserEditProfile: Fragment() {
         val fab: View = binding.fab
 
         userViewModel.profileEditDetailed.observe(viewLifecycleOwner){
-            proId = it.id
-            lat = it.lat.toFloat()
-            lng = it.lng.toFloat()
-            name = it.company_name
-            _binding?.repoDetailName?.text = it.company_name
-            _binding?.repoDetailDescription?.text = it.company_description
+            if (it != null) {
+                proId = it.id
+                lat = it.lat.toFloat()
+                lng = it.lng.toFloat()
+                name = it.company_name
+                _binding?.repoDetailName?.text = it.company_name
+                _binding?.repoDetailDescription?.text = it.company_description
+            }
         }
         binding.btnDetailGeo.setOnClickListener {
             val lat: Float = this.lat

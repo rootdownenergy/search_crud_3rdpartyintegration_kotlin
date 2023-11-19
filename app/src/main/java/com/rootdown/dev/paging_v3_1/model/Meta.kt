@@ -1,8 +1,10 @@
 package com.rootdown.dev.paging_v3_1.model
 
+import androidx.annotation.Keep
 import androidx.room.Entity
 import com.google.gson.annotations.SerializedName
 
+@Keep
 @Entity(tableName = "meta")
 data class Meta(
     @field:SerializedName("current_page") val current_page: Int,

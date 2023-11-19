@@ -48,11 +48,11 @@ class HomeFragment: Fragment() {
         }
         val root = inflater.inflate(R.layout.fragment_home, container, false)
         val epoxyView: EpoxyRecyclerView = root!!.findViewById(R.id.rvTask) as EpoxyRecyclerView
-        viewModel.strain.observe(viewLifecycleOwner, { strains ->
+        viewModel.strain.observe(viewLifecycleOwner) { strains ->
             strains?.let {
                 setupRecyclerView(it, epoxyView, topStrains)
             }
-        })
+        }
         return root
     }
 
@@ -68,12 +68,15 @@ class HomeFragment: Fragment() {
     }
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.sativa -> {
+            showSnackBar("Sativa", requireActivity())
             true
         }
         R.id.indica -> {
+            showSnackBar("Indica", requireActivity())
             true
         }
         R.id.hybrid -> {
+            showSnackBar("Hybrid", requireActivity())
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -129,10 +132,3 @@ class HomeFragment: Fragment() {
         }
     }
 }
-
-
-
-data class StrainType(
-    val id: Int,
-    val type: String,
-)

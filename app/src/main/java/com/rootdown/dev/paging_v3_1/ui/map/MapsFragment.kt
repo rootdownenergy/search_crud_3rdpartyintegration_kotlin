@@ -1,10 +1,16 @@
 package com.rootdown.dev.paging_v3_1.ui.map
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -22,6 +28,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.ktx.awaitMap
@@ -35,31 +42,29 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-
+const val AUTOCOMPLETE_REQUEST_CODE = 2
 @AndroidEntryPoint
 class MapsFragment : Fragment(), GoogleMap.OnMarkerClickListener {
 
     private val viewModel: MapsViewModel by viewModels()
     private val REQUEST_LOCATION_PERMISSION = 1
-    private var _binding: FragmentMapsBinding? = null
-    private val binding get() = _binding!!
+    private lateinit var _binding: FragmentMapsBinding
     private var latCurr: Double = 0.0
     private var lngCurr: Double = 0.0
     private var latlngLs: List<DatabaseCoordinates> = emptyList()
 
-    private var latLs: List<Double> = emptyList()
-    private var lngLs: List<Double> = emptyList()
-    private var searchJob: Job? = null
-    private val options = MarkerOptions()
-    private val latlngs: ArrayList<LatLng> = ArrayList()
 
+    //private var searchJob: Job? = null
+    //private val options = MarkerOptions()
+    private val latlngs: ArrayList<LatLng> = ArrayList()
     // Declare a variable for the cluster manager.
     private lateinit var clusterManager: ClusterManager<MyItem>
-
-
     private lateinit var googleMap: GoogleMap
     private lateinit var lastLocation: Location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    //private lateinit var places: PlacesClient
+
+    //private lateinit var dMatrix: MutableList<String>
 
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -69,6 +74,18 @@ class MapsFragment : Fragment(), GoogleMap.OnMarkerClickListener {
         super.onCreate(savedInstanceState)
         (activity as AppCompatActivity).supportActionBar?.title = ""
         val inflater = TransitionInflater.from(requireContext())
+        val conxx: Context = requireContext()
+        val ai: ApplicationInfo = conxx.packageManager
+            .getApplicationInfo(conxx.packageName, PackageManager.GET_META_DATA)
+        //val value = ai.metaData["keyValue"]
+        //val key = value.toString()
+        // Initializing the Places API
+        // with the help of our API_KEY
+        //if (!Places.isInitialized()) {
+            //Places.initialize(conxx, key)
+            //val placesClient = Places.createClient(conxx)
+            //places = placesClient
+        //}
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         setHasOptionsMenu(true)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.requireActivity())
@@ -76,38 +93,53 @@ class MapsFragment : Fragment(), GoogleMap.OnMarkerClickListener {
     }
     override fun onResume() {
         super.onResume()
-
         // Set title bar
         (activity as MainActivity?)
             ?.setActionBarTitle("")
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentMapsBinding.inflate(inflater, container, false)
-        val view = binding.root
-        val fab: View = binding.fabMapProfiles
-        viewModel.latlng.observe(viewLifecycleOwner, { latlng ->
+        val view = _binding.root
+        val fab: View = _binding.fabMapProfiles
+        //val autocompleteFragment = childFragmentManager.findFragmentById(R.id.autocomplete_fragment) as? AutocompleteSupportFragment?
+        // Specify the types of place data to return.
+        //autocompleteFragment?.setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME))
+        // Set up a PlaceSelectionListener to handle the response.
+        //autocompleteFragment?.setOnPlaceSelectedListener(object : PlaceSelectionListener {
+            //override fun onPlaceSelected(place: Place) {
+                //
+            //}
+
+            //override fun onError(p0: Status) {
+                //
+            //}
+        //})
+
+        viewModel.latlng.observe(viewLifecycleOwner) { latlng ->
             latlng?.let {
                 latlngLs = it
             }
-        })
+        }
         fab.setOnClickListener{
+            var xStr: String = ""
             val app = ThisApp()
             val controller = LatLngController()
             lifecycleScope.launch {
-                controller.go()
+                runCatching {
+                    xStr = controller.go()
+                }
+                setUpCluster()
             }
-            val test = controller.result
-            //Toast.makeText(this.requireContext(), "TEST $test", Toast.LENGTH_LONG).show()
-            setUpClusterer()
-
+            val test = controller.resultOut
+            Toast.makeText(this.requireContext(), "DISTANCE MATRIX:  $xStr", Toast.LENGTH_LONG).show()
             //var latList: List<Double> = emptyList()
             //var lngList: List<Double> = emptyList()
-
             //latlngLs.forEach {
                 //latList += it.lat
                 //lngList += it.lng
@@ -129,32 +161,22 @@ class MapsFragment : Fragment(), GoogleMap.OnMarkerClickListener {
         }
         return view
     }
-    private fun setUpClusterer() {
-
-        // Position the map.
+    @SuppressLint("PotentialBehaviorOverride")
+    private fun setUpCluster() {
         latCurr.notNull {
             lngCurr.notNull {
                 setCameraOnLocation()
             }
         }
-
-
-        // Initialize the manager with the context and the map.
-        // (Activity extends context, so we can pass 'this' in the constructor.)
         clusterManager = ClusterManager(context, googleMap)
-
-        // Point the map's listeners at the listeners implemented by the cluster
-        // manager.
         googleMap.setOnCameraIdleListener(clusterManager)
         googleMap.setOnMarkerClickListener(clusterManager)
-
-        // Add cluster items (markers) to the cluster manager.
         addItems()
     }
-    fun <T : Any> T?.notNull(f: (it: T) -> Unit) {
+    private fun <T : Any> T?.notNull(f: (it: T) -> Unit) {
         if (this != null) f(this)
     }
-    fun setCameraOnLocation(){
+    private fun setCameraOnLocation(){
         //googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(39.7193329, -105.027629), 10f))
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latCurr, lngCurr), 10f))
     }
@@ -170,7 +192,6 @@ class MapsFragment : Fragment(), GoogleMap.OnMarkerClickListener {
                     MyItem(it.lat, it.lng, "X", "Snippet")
             clusterManager.addItem(offsetItem)
         }
-
         //for (point in latlngs) {
             //val offsetItem =
                 //MyItem(, lng, "Title $i", "Snippet $i")
@@ -191,11 +212,6 @@ class MapsFragment : Fragment(), GoogleMap.OnMarkerClickListener {
         val lng = args.lng.toDouble()
         val title = args.title
         val bbbrands = LatLng(lat, lng)
-        val point1 = LatLng(40.6974034, -74.1197638) // NewYork
-
-        val point2 = LatLng(40.7440702, -73.9353235) // Seattle
-
-
         lifecycle.coroutineScope.launchWhenCreated {
             googleMap = mapFragment?.awaitMap()!!
             googleMap.uiSettings.isZoomControlsEnabled = true
@@ -255,10 +271,7 @@ class MapsFragment : Fragment(), GoogleMap.OnMarkerClickListener {
         else -> super.onOptionsItemSelected(item)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
+    @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -269,12 +282,24 @@ class MapsFragment : Fragment(), GoogleMap.OnMarkerClickListener {
             }
         }
     }
-
-
     private fun enableMyLocation() {
         if (isPermissionGranted()) {
+            if (ActivityCompat.checkSelfPermission(
+                    this.requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                    this.requireContext(),
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return
+            }
             googleMap.isMyLocationEnabled = true
-
         }
         else {
             ActivityCompat.requestPermissions(
@@ -335,5 +360,4 @@ class MapsFragment : Fragment(), GoogleMap.OnMarkerClickListener {
             this.snippet = snippet
         }
     }
-
 }

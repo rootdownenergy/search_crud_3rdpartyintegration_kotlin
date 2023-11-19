@@ -12,10 +12,13 @@ import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.rootdown.dev.paging_v3_1.databinding.FragmentUserEditStrainBinding
 import com.rootdown.dev.paging_v3_1.ui.MainActivity
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
 
+@AndroidEntryPoint
 class FragmentUserEditStrain: Fragment() {
+
     private var _binding: FragmentUserEditStrainBinding? = null
     private val binding get() = _binding!!
     private val userViewModel: UserContentViewModel by viewModels()
@@ -44,18 +47,18 @@ class FragmentUserEditStrain: Fragment() {
         val img: ImageView = _binding!!.strainDetailImgId
 
         userViewModel.strainEditDetailed.observe(viewLifecycleOwner){
-            currStrainName = it.strain_name
-            strid = it.id
-            val it_strain_img = it.strain_image
-            val uri = "https://cdn.karmanomic.com/$it_strain_img"
-            if(it_strain_img != null){
-                Glide.with(this)
-                    .load(uri)
-                    .override(100, 600)
-                    .fitCenter()
-                    .into(img)
+            if (it != null) {
+                currStrainName = it.strain_name
+                strid = it.id
+                val itStrainImg = it.strain_image
+                val uri = "https://d3b3tm7jjqus71.cloudfront.net/$itStrainImg"
+                if(itStrainImg != null){
+                    Glide.with(this)
+                        .load(uri)
+                        .into(img)
+                }
+                _binding!!.strainDetailNameId.text = it.strain_name.removeSuffix(".webp")
             }
-            _binding!!.strainDetailNameId.text = it.strain_name
         }
 
         fab.setOnClickListener { view ->

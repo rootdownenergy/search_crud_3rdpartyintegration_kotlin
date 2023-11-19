@@ -2,13 +2,10 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/strainDetailsCoordinatorLayout"
+    android:id="@+id/strain_details_coordinator_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context="ui.home.StrainsDetailsFragment">
 
         <com.google.android.material.card.MaterialCardView
             android:layout_margin="8dp"
@@ -31,7 +28,7 @@
                 app:layout_constraintVertical_bias="0.0">
 
                 <ImageView
-                    android:id="@+id/strainDetailImgId"
+                    android:id="@+id/strain_detail_img_id"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:adjustViewBounds="false"
@@ -45,7 +42,7 @@
                     android:contentDescription="@string/strains" />
 
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/strainDetailNameId"
+                    android:id="@+id/strain_detail_name_id"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="8dp"
@@ -63,7 +60,7 @@
             app:layout_constraintBottom_toBottomOf="parent">
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/saveStrain"
+                android:id="@+id/save_strain"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end|bottom"
@@ -72,6 +69,4 @@
                 android:layout_margin="16dp" />
 
         </com.google.android.material.appbar.MaterialToolbar>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

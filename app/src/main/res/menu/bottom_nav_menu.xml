@@ -19,11 +19,11 @@
     <item
         android:id="@+id/nav_user_strains"
         android:icon="@drawable/ic_star"
-        android:title="Saved Strains" />
+        android:title="@string/saved_strains" />
 
     <item
         android:id="@+id/nav_user_profiles"
         android:icon="@drawable/ic_star"
-        android:title="Saved Profiles" />
+        android:title="@string/saved_profiles" />
 
 </menu>

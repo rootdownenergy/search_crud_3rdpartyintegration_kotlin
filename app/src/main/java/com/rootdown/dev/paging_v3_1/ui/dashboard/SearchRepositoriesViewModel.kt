@@ -4,10 +4,15 @@ import androidx.lifecycle.*
 import androidx.paging.*
 import com.rootdown.dev.paging_v3_1.data.Repo
 import com.rootdown.dev.paging_v3_1.repo.RootDownRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class SearchRepositoriesViewModel(private val repository: RootDownRepository) : ViewModel() {
+@HiltViewModel
+class SearchRepositoriesViewModel @Inject constructor(
+    private val repository: RootDownRepository,
+) : ViewModel() {
 
     private var currentQueryValue: String? = null
     private var currentSearchResult: Flow<PagingData<UiModel>>? = null

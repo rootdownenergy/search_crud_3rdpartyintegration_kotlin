@@ -1,36 +1,64 @@
 package com.rootdown.dev.paging_v3_1.ui.user
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.rootdown.dev.paging_v3_1.api.UserProfile
 import com.rootdown.dev.paging_v3_1.api.UserStrain
-import com.rootdown.dev.paging_v3_1.data.*
-import com.rootdown.dev.paging_v3_1.db.RepoDatabase
-import com.rootdown.dev.paging_v3_1.repo.ProfileRepository
-import com.rootdown.dev.paging_v3_1.repo.StrainsRepository
+import com.rootdown.dev.paging_v3_1.data.DatabaseStrain
+import com.rootdown.dev.paging_v3_1.data.Repo
+import com.rootdown.dev.paging_v3_1.data.UserDatabaseStrain
+import com.rootdown.dev.paging_v3_1.data.UserRepo
 import com.rootdown.dev.paging_v3_1.repo.UserContent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 
-@HiltViewModel
-class UserContentViewModel @Inject constructor (application: Application, state: SavedStateHandle) : AndroidViewModel(application) {
 
-    private val userContent = UserContent(RepoDatabase.getInstance(application))
-    private val strainsRepository = StrainsRepository(RepoDatabase.getInstance(application))
-    private val profileRepository = ProfileRepository(RepoDatabase.getInstance(application))
-    val userStrainStateId = state.get<String?>("strId")
+
+
+@HiltViewModel
+class UserContentViewModel @Inject constructor(
+    private val repo: UserContent,
+    state: SavedStateHandle,
+    application: Application
+) : ViewModel() {
+
+    private val userContent = repo
+    private val userStrainStateId = state.get<String?>("strId")
     private val getProfileId = state.get<Long>("profileId")
 
     val updatedProfile: LiveData<List<UserProfile>> = userContent.userRepos
     val updatedStrains: LiveData<List<UserStrain>> = userContent.userStrains
     val strainEditDetailed: LiveData<UserDatabaseStrain> = userContent.getStrain(userStrainStateId)
     val profileEditDetailed: LiveData<UserRepo> = userContent.getProfile(getProfileId)
+    private val outputDir = application.filesDir.path
+    private val dir = File(outputDir)
+    private val files: Array<File> = dir.listFiles() as Array<File>
+    private val xx = mutableListOf<String>()
+
+    //private var filesList = MutableLiveData<List<String>>()
+
+    private val fileLsUserContent: MutableLiveData<List<String>> = MutableLiveData<List<String>>();
+    val filesLiveData : LiveData<List<String>> by this::fileLsUserContent
+
+    init {
+        fileLsUserContent.value = xx
+    }
+
+    fun refreshFilesList(){
+        viewModelScope.launch {
+            files.forEach {
+                if(it.path.endsWith(".png"))
+                {
+                    xx.add(it.path.toString())
+                }
+            }
+        }
+    }
+
 
     /**
      * Launching a new coroutine to delete an item in a non-blocking way
@@ -125,6 +153,7 @@ class UserContentViewModel @Inject constructor (application: Application, state:
 
         updateRepo(updatedRepo)
     }
+    // get files and store in Flow
 
     private fun updateRepo(repo: Repo)
     {

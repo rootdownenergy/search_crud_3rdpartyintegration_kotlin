@@ -1,0 +1,248 @@
+package com.rootdown.dev.epoxy1_23_2021.ui.dashboard
+
+import android.annotation.SuppressLint
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavOptions
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment.findNavController
+import androidx.navigation.fragment.findNavController
+import androidx.transition.TransitionInflater
+import com.airbnb.epoxy.EpoxyRecyclerView
+import com.rootdown.dev.epoxy1_23_2021.R
+import com.rootdown.dev.epoxy1_23_2021.domain.Data
+import com.rootdown.dev.epoxy1_23_2021.domain.Strains
+import com.rootdown.dev.epoxy1_23_2021.profile
+import com.rootdown.dev.epoxy1_23_2021.title
+import com.rootdown.dev.epoxy1_23_2021.ui.maps.MapsFragment
+
+
+class DashboardFragment : Fragment() {
+    //private val context = getApplication<Application>().applicationContext
+    private val viewModel: DashboardViewModel by lazy {
+        val activity = requireNotNull(this.activity) {
+            "You can only access the viewModel after onActivityCreated()"
+        }
+        ViewModelProvider(this, DashboardViewModel.Factory(activity.application))
+                .get(DashboardViewModel::class.java)
+    }
+    var strainls: List<Data> = emptyList()
+        set(value) {
+            field = value
+            // For an extra challenge, update this to use the paging library.
+
+            // Notify any registered observers that the data set has changed. This will cause every
+            // element in our RecyclerView to be invalidated.
+            //notifyDataSetChanged()
+        }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val inflater = TransitionInflater.from(requireContext())
+        exitTransition = inflater.inflateTransition(R.transition.fade)
+    }
+    val result = ArrayList<Strains>()
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val root = inflater.inflate(R.layout.fragment_dashboard, container, false)
+        val epoxyView: EpoxyRecyclerView = root!!.findViewById(R.id.rvProfiles) as EpoxyRecyclerView
+        viewModel.profilesls.observe(viewLifecycleOwner, Observer<List<Data>> { profiles ->
+            profiles?.let {
+                setupRecyclerView(it, epoxyView)
+            }
+        })
+        return root
+    }
+
+    @SuppressLint("ResourceType")
+    private fun setupRecyclerView(x: List<Data>, epoxy: EpoxyRecyclerView) {
+        //val rvTask = findViewById<EpoxyRecyclerView>(R.id.rvTask)
+        epoxy.withModels {
+            // First title
+            title {
+                id("title-id")
+                title("Top Dispensaries")
+            }
+            x.forEach { currentProfile ->
+                profile {
+                    id(currentProfile.profile_id)
+                    profile(currentProfile)
+                    clickListener { profile ->
+                        //val navController = findNavController()
+                        val lat: Float = currentProfile.lat.toFloat()
+                        val lng: Float = currentProfile.lng.toFloat()
+                        val title: String = currentProfile.company_name
+                        val action = DashboardFragmentDirections.actionFragmentDashboardToFragmentMaps(lat,lng,title)
+                        view?.findNavController()?.navigate(action)
+                        //navController.navigate(R.id.mapsFragment)
+                        //view?.findNavController()?.navigate(R.id.mapsFragment,null, NavOptions.Builder()
+                            //.setPopUpTo(R.id.navigation_dashboard, true)
+                            //.build())
+                        //navController.n
+                        //val nextFrag = MapsFragment()
+                        //requireActivity().supportFragmentManager.beginTransaction()
+                            //.remove(DashboardFragment())
+                            //.show(MapsFragment())
+                            //.replace((requireView().parent as ViewGroup).id, nextFrag, "findDashboard")
+                            //.addToBackStack(null)
+                            //.commit()
+                        //Toast.makeText(activity,
+                       //currentProfile.lat.toString(),
+                        //Toast.LENGTH_SHORT
+                        //).show();
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+class DashboardViewModel(application: Application) : AndroidViewModel(application) {
+
+    /**
+     * The data source this ViewModel will fetch results from.
+     */
+    private val profilesRepository = ProfilesRepository(getDatabase(application))
+
+    val profilesls = profilesRepository.profilesls
+    //private val context = getApplication<Application>().applicationContext
+    init {
+        refreshDataFromRepository()
+        //SpacesFileRepository(context)
+    }
+
+
+    private fun refreshDataFromRepository() {
+        viewModelScope.launch {
+            try {
+                profilesRepository.refreshProfiles()
+
+            } catch (networkError: IOException) {
+                // Show a Toast error message and hide the progress bar.
+                if(profilesls.value.isNullOrEmpty())
+                {
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Factory for constructing DashboardViewModel with parameter
+     */
+    class Factory(private val app: Application) : ViewModelProvider.Factory {
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return DashboardViewModel(app) as T
+            }
+            throw IllegalArgumentException("Unable to construct viewmodel")
+        }
+    }
+}
+
+
+
+
+
+    implementation fileTree(dir: 'libs')
+    implementation 'androidx.annotation:annotation:1.2.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines"
+    implementation "androidx.appcompat:appcompat:$supportLibVersion"
+    implementation "androidx.recyclerview:recyclerview:$recyclerViewVersion"
+    implementation "androidx.constraintlayout:constraintlayout:$constraintLayoutVersion"
+    implementation "com.google.android.material:material:$materialVersion"
+
+    // architecture components
+    implementation "androidx.core:core-ktx:$coreVersion"
+    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
+    implementation "androidx.room:room-runtime:$roomVersion"
+    implementation "androidx.room:room-ktx:$roomVersion"
+    implementation "androidx.paging:paging-runtime-ktx:$pagingVersion"
+    kapt "androidx.room:room-compiler:$roomVersion"
+
+    // retrofit
+    implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
+    implementation "com.squareup.retrofit2:retrofit-mock:$retrofitVersion"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okhttpLoggingInterceptorVersion"
+	
+	   implementation 'androidx.navigation:navigation-fragment-ktx:2.3.3'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.3.3'
+    // Dynamic Feature Module Support
+    implementation "androidx.navigation:navigation-dynamic-features-fragment:2.3.3"
+    // Testing Navigation
+    androidTestImplementation "androidx.navigation:navigation-testing:2.3.3"
+	
+	
+	    compileSdkVersion = 28
+    minSdkVersion = 16
+    targetSdkVersion = 28
+    supportLibVersion = '1.2.0'
+    coreVersion = '1.3.2'
+    recyclerViewVersion = '1.2.1'
+    constraintLayoutVersion = '2.1.0'
+    materialVersion = '1.4.0'
+    lifecycleVersion = '2.2.0'
+    roomVersion = '2.3.0-alpha03'
+    pagingVersion = '3.0.0-alpha11'
+    retrofitVersion = '2.9.0'
+    okhttpLoggingInterceptorVersion = '4.0.0'
+    coroutines = '1.5.0'
+	
+	
+	
+	
+	
+	            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/repo_forks"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingVertical="@dimen/row_item_margin_vertical"
+                android:textSize="@dimen/repo_description_size"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/repo_description"
+                tools:text="30"/>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+

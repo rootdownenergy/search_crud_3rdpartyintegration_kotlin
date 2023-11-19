@@ -34,22 +34,10 @@ class ProfileDetailsFragment: Fragment() {
     private var lat by Delegates.notNull<Float>()
     private var lng by Delegates.notNull<Float>()
     private lateinit var name: String
-    private var proId by Delegates.notNull<Long>()
-
 
     private val viewModel: HomeViewModel by viewModels()
     private val userViewModel: UserContentViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        (activity as MainActivity).supportActionBar?.title = ""
-    }
-    override fun onResume() {
-        super.onResume()
-        // Set title bar
-        (activity as MainActivity)
-            .setActionBarTitle("")
-    }
 
     @SuppressLint("ResourceAsColor")
     override fun onCreateView(
@@ -60,7 +48,6 @@ class ProfileDetailsFragment: Fragment() {
         _binding = FragmentProfileDetailsBinding.inflate(inflater, container, false)
         val view = binding.root
         val fab: View = binding.fab
-
 
         viewModel.profileDetailed.observe(viewLifecycleOwner, Observer {
             lat = it.lat.toFloat()
@@ -167,7 +154,6 @@ class ProfileDetailsFragment: Fragment() {
                 userViewModel.deleteUserProfile(proId)
             }
         }
-
     }
 
 }

@@ -45,7 +45,6 @@ public class ChangeController implements Callback<List<Change>> {
     @Override
     public void onResponse(@NonNull Call<List<Change>> call, Response<List<Change>> response) {
         if(response.isSuccessful()) {
-            Log.w("$INJAVA$", "IN API SUCCESSFUL JAVA");
             List<Change> changesList = response.body();
             assert changesList != null;
             changesList.forEach(change -> Log.w("XXXXX$$$$", change.getSubject().toString()));

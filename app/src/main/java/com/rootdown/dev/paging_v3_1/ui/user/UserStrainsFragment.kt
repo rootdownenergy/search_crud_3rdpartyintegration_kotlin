@@ -1,5 +1,6 @@
 package com.rootdown.dev.paging_v3_1.ui.user
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.LinearLayout
@@ -8,24 +9,20 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionInflater
-import androidx.viewpager2.widget.ViewPager2
 import com.airbnb.epoxy.EpoxyRecyclerView
 import com.rootdown.dev.paging_v3_1.R
 import com.rootdown.dev.paging_v3_1.api.UserStrain
 import com.rootdown.dev.paging_v3_1.databinding.FragmentUserStrainsBinding
 import com.rootdown.dev.paging_v3_1.ui.MainActivity
+import com.rootdown.dev.paging_v3_1.ui.custom_content.CustomContentActivity
+import com.rootdown.dev.paging_v3_1.ui.drag_and_drop.ReorderActivity
 import com.rootdown.dev.paging_v3_1.user
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class UserStrainsFragment: Fragment(R.layout.fragment_user_strains) {
+class UserStrainsFragment: Fragment() {
 
     private lateinit var binding: FragmentUserStrainsBinding
-
-    private lateinit var demoCollectionAdapter: StrainCreatePagerAdapter
-    private lateinit var viewPager: ViewPager2
-
-
     private val viewModel: UserContentViewModel by viewModels()
     //private val adapter = UserStrainsAdapter{position -> onListItemClick(position)}
     //var strain_ls: List<UserStrain> = emptyList()
@@ -46,6 +43,11 @@ class UserStrainsFragment: Fragment(R.layout.fragment_user_strains) {
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentUserStrainsBinding.inflate(inflater)
+        binding.animationView.setAnimation("lottie_cloud.json")
+        binding.animationView.playAnimation()
+        binding.animationViewBitcoin.setAnimation("lottie_bitcoin.json")
+        binding.animationViewBitcoin.playAnimation()
+
         val epoxyView: EpoxyRecyclerView = binding.userStrainLs
 
         viewModel.updatedStrains.observe(viewLifecycleOwner){
@@ -59,6 +61,23 @@ class UserStrainsFragment: Fragment(R.layout.fragment_user_strains) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val x = view.findViewById<LinearLayout>(R.id.userStrainsLayout)
         //x.orientation
+
+        binding.createGeoMapper.setOnClickListener {
+            //val intent = Intent (activity, GeomapperActivity::class.java)
+            //activity?.startActivity(intent)
+            //val intent = Intent(this@UserStrainsFragment.context, GeomapperActivity::class.java)
+            //startActivity(intent)
+            activity?.let{
+                val intent = Intent (it, CustomContentActivity::class.java)
+                it.startActivity(intent)
+            }
+        }
+        binding.animationViewBitcoin.setOnClickListener {
+            activity?.let{
+                val intent = Intent (it, ReorderActivity::class.java)
+                it.startActivity(intent)
+            }
+        }
         super.onViewCreated(view, savedInstanceState)
     }
 

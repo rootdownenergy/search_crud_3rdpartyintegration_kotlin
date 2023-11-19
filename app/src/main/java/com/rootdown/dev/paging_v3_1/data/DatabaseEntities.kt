@@ -1,5 +1,6 @@
 package com.rootdown.dev.paging_v3_1.data
 
+import androidx.annotation.Keep
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
@@ -8,7 +9,7 @@ import com.rootdown.dev.paging_v3_1.api.Strain
 import com.rootdown.dev.paging_v3_1.api.UserProfile
 import com.rootdown.dev.paging_v3_1.api.UserStrain
 
-
+@Keep
 @Entity(tableName = "databasestrain")
 data class DatabaseStrain constructor(
     @PrimaryKey
@@ -25,6 +26,7 @@ data class DatabaseStrain constructor(
     val updated_at: String?,
     val created_at: String?
 )
+@Keep
 @Entity(tableName = "databaselatlng")
 data class DatabaseLatLng constructor(
     @PrimaryKey
@@ -32,6 +34,7 @@ data class DatabaseLatLng constructor(
     val lat: Double,
     val lng: Double
 )
+@Keep
 @Entity(tableName = "repos")
 data class Repo(
     @PrimaryKey @field:SerializedName("id") val id: Long,
@@ -74,7 +77,6 @@ data class Repo(
     @field:SerializedName("created_at") val created_at: String?,
     @field:SerializedName("updated_at") val updated_at: String?
 )
-
 
 // tables to save individual strains or dispensaries for user content feature set
 @Entity(tableName = "userrepo")
@@ -150,8 +152,8 @@ fun List<DatabaseLatLng>.asDomainModel(): List<DatabaseCoordinates>{
     }
 }
 
-@JvmName("asDomainModel")
-fun List<UserRepo>.asDomainModel(): List<UserProfile>{
+@JvmName("asConvertor")
+fun List<UserRepo>.asConvertor(): List<UserProfile>{
     return map {
         UserProfile(
             id = it.id,
@@ -215,6 +217,31 @@ fun List<UserDatabaseStrain>.asDomainModel(): List<UserStrain>{
         )
     }
 }
+
+
+
+
+@JvmName("asDomainModelUserStrainConverted")
+fun MutableList<UserDatabaseStrain>.asDomainModel(): List<UserStrain>{
+    return map {
+        UserStrain(
+            id = it.id,
+            strainOwnerId = it.strainOwnerId,
+            strain_name = it.strain_name,
+            strain_description = it.strain_description,
+            thc = it.thc,
+            cbd = it.cbd,
+            cbn = it.cbn,
+            strain_tag_words = it.strain_tag_words,
+            strain_image = it.strain_image,
+            strain_type = it.strain_type,
+            created_at = it.created_at,
+            updated_at = it.updated_at
+        )
+    }
+}
+
+
 
 @JvmName("asDomainModelStrain")
 fun List<DatabaseStrain>.asDomainModel(): List<Strain>{
